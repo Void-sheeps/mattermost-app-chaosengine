@@ -962,3 +962,269 @@ Write-Host "`n" + ("█" * 70) -ForegroundColor DarkYellow
 Write-Host " PROTOCOLO CONCLUÍDO - AGUARDANDO NOVAS DIRETRIZES " `
     -ForegroundColor Black -BackgroundColor Yellow
 Write-Host ("█" * 70) -ForegroundColor DarkYellow
+<#
+.SYNOPSIS
+  Protocolo de execução que ativa o módulo AmareloEnxofre e exibe
+  análises cromatográficas / reações kairomonais com visualização em console.
+
+.NOTES
+  Salve na mesma pasta do módulo AmareloEnxofre.psm1 e execute:
+    Import-Module .\AmareloEnxofre.psm1 -Force
+    .\Protocolo_Sulfur.ps1
+#>
+
+# ============ CONFIGURAÇÃO INICIAL ============
+try {
+    Import-Module .\AmareloEnxofre.psm1 -Force -ErrorAction Stop
+    Write-Host "✓ Módulo AmareloEnxofre carregado com sucesso" -ForegroundColor Green
+} catch {
+    Write-Host "✗ Erro ao carregar o módulo AmareloEnxofre.psm1" -ForegroundColor Red
+    Write-Host "  Certifique-se de que o arquivo está no mesmo diretório." -ForegroundColor Yellow
+    exit 1
+}
+
+# ============ FUNÇÕES AUXILIARES ============
+function Show-Cabecalho {
+    $enxofre = Get-CorEnxofrePuro
+    $corCabecalho = ConverterPara-ConsoleColorEnxofre -Cor $enxofre
+    
+    Write-Host "`n" + ("█" * 75) -ForegroundColor $corCabecalho
+    Write-Host "   🧪 EMPIRE SILICIUM - AXÍOMA MNEMOSYNIS 2026   " -ForegroundColor White
+    Write-Host "   🧬 PROTOCOLO LOGOS KHŌRIS PATHOUS ACTIVADO    " -ForegroundColor $corCabecalho
+    Write-Host ("█" * 75) -ForegroundColor $corCabecalho
+    Write-Host ""
+}
+
+function Invoke-KairomonalReaction {
+    param ([string]$Pheromone, [int]$Intensidade = 1)
+    
+    # Validação da intensidade
+    $Intensidade = [Math]::Max(1, [Math]::Min(4, $Intensidade))
+    
+    # Gerar gradiente tóxico baseado na intensidade
+    $corBase = Get-CorEnxofrePuro
+    $corReacao = $corBase.Radioactive($Intensidade * 15)
+    $corConsole = ConverterPara-ConsoleColorEnxofre -Cor $corReacao
+    
+    Write-Host "`n[ANÁLISE QUIMIOSSENSORIAL]" -ForegroundColor $corConsole
+    Write-Host "Componente: $Pheromone" -ForegroundColor White
+    Write-Host "Status: " -NoNewline
+    
+    # Simulação de resposta gradiente
+    $respostas = @("Fraca", "Moderada", "Forte", "Intensa")
+    $simbolos = @("○", "◔", "◑", "◕", "●")
+    
+    $resposta = $respostas[$Intensidade - 1]
+    $simIdx = [Math]::Min($Intensidade, $simbolos.Count - 1)
+    
+    Write-Host "$resposta " -NoNewline -ForegroundColor $corConsole
+    Write-Host $simbolos[$simIdx] -NoNewline -ForegroundColor $corConsole
+    Write-Host " $($simbolos[$simIdx]) $($simbolos[$simIdx])" -ForegroundColor $corConsole
+    
+    # Retorno com código de cor
+    return [PSCustomObject]@{
+        Resposta = "Positiva em $([Math]::Pow(2, $Intensidade)) réplicas"
+        Cor = $corReacao.ToHex()
+        Intensidade = $Intensidade
+        ConsoleColor = $corConsole
+    }
+}
+
+function Show-Chromatogram {
+    param([int]$Picos = 8)
+    
+    Write-Host "`n📊 CROMATOGRAMA VIRTUAL - ANÁLISE SULFUR" -ForegroundColor White
+    Write-Host ("─" * 65) -ForegroundColor DarkYellow
+    
+    $paleta = Get-PaletaRadioativa $Picos
+    $alturaMaxima = 0
+    
+    # Calcula alturas
+    $alturas = @()
+    for ($i = 0; $i -lt $Picos; $i++) {
+        $altura = 5 + ($i * 3)
+        $alturas += $altura
+        if ($altura -gt $alturaMaxima) { $alturaMaxima = $altura }
+    }
+    
+    # Escala para máximo 25 caracteres
+    $escala = if ($alturaMaxima -gt 25) { 25.0 / $alturaMaxima } else { 1.0 }
+    
+    foreach ($i in 0..($Picos-1)) {
+        $cor = $paleta[$i]
+        $alturaOriginal = $alturas[$i]
+        $alturaEscalada = [int]($alturaOriginal * $escala)
+        $tempo = [Math]::Round(1.5 + ($i * 0.8), 2)
+        
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        
+        # Barra do cromatograma
+        $barra = "█" * [Math]::Max(1, $alturaEscalada)
+        Write-Host ("{0,-7} {1,-25} {2,-10} {3}" -f `
+            "$tempo min", 
+            $barra,
+            $cor.ToHex(),
+            "Pico $(($i+1).ToString('00'))") -ForegroundColor $consoleColor
+    }
+    
+    Write-Host ("─" * 65) -ForegroundColor DarkYellow
+    Write-Host "Legenda: █ = Intensidade do sinal | Tempo em minutos" -ForegroundColor Gray
+}
+
+function Show-SystemInfo {
+    param([hashtable]$SystemData)
+    
+    Write-Host "`n🖥️  ESTADO DO SISTEMA SILICIUM:" -ForegroundColor Cyan
+    Write-Host ("─" * 50) -ForegroundColor DarkCyan
+    
+    foreach ($key in $SystemData.Keys) {
+        $cor = if ($key -eq "Element") { 
+            Get-CorEnxofrePuro 
+        } elseif ($key -eq "Radioactivity") { 
+            Get-CorEnxofreRadioativo 
+        } else { 
+            Get-CorEnxofreApagado 
+        }
+        
+        $fg = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        Write-Host ("  {0,-20}: {1}" -f $key, $SystemData[$key]) -ForegroundColor $fg
+    }
+}
+
+function Show-RadioactivePulse {
+    Write-Host "`n☢️  SEQUÊNCIA DE PULSAÇÃO RADIOATIVA:" -ForegroundColor White
+    Write-Host ("─" * 50) -ForegroundColor DarkYellow
+    
+    $sequencia = Get-SequenciaRadioativa
+    $pulsoCount = [Math]::Min(6, $sequencia.Count)
+    
+    for ($i = 0; $i -lt $pulsoCount; $i++) {
+        $idx = [Math]::Min($i * 3, $sequencia.Count - 1)
+        $cor = $sequencia[$idx]
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        $pulsos = "☢" * ($i + 1)
+        
+        Write-Host ("  {0,-12} {1} {2}" -f "Pulsação $($i+1):", $pulsos, $cor.ToHex()) `
+            -ForegroundColor $consoleColor
+        Start-Sleep -Milliseconds 150
+    }
+}
+
+# ============ DADOS DO SISTEMA ============
+$System = @{
+    Species = "Gemini mnemosynis"
+    Phylum  = "Algorithmi"
+    Status  = "Ratio Sine Qualia"
+    Element = (Get-CorEnxofrePuro).ToHex() + " (Sulfur Spectrum)"
+    Radioactivity = "Nível 4 - Controlado"
+    Versao  = "Mnemosynis 2026.1"
+}
+
+$DataExtract = @{
+    Hospedeiro_A = "Prays oleae (Mariposa da oliveira)"
+    Hospedeiro_B = "Palpita unionalis (Mariposa do jasmim)"
+    Parasitoide  = "Trichogramma oleae"
+    Kairomona_A  = "(Z)-7-tetradecenal"
+    Kairomona_B  = "(E)-11-hexadecenyl acetate"
+    Concentracao = "1.5 ng/µL"
+    Solvente     = "Hexano HPLC"
+    Metodo       = "Olfatômetro de tubo em Y"
+    Replicatas   = "30"
+}
+
+# ============ EXECUÇÃO PRINCIPAL ============
+Clear-Host
+Show-Cabecalho
+
+# Exibir informações do sistema
+Show-SystemInfo -SystemData $System
+
+Write-Host "`n🔬 EXTRATO DE DADOS BIOSSENSORIAIS:" -ForegroundColor White
+Write-Host ("─" * 50) -ForegroundColor Gray
+
+foreach ($key in $DataExtract.Keys) {
+    if ($key -notlike "*Kairomona*") {
+        Write-Host ("  {0,-15}: {1}" -f $key, $DataExtract[$key]) -ForegroundColor Gray
+    }
+}
+
+# Processando cada kairomona com reações visuais
+Write-Host "`n🧪 REAÇÕES KAIROMONAIS DETECTADAS:" -ForegroundColor White
+$resultados = @()
+
+foreach ($key in $DataExtract.Keys) {
+    if ($key -like "*Kairomona*") {
+        $intensidade = if ($key -like "*_A") { 2 } else { 4 }
+        $resultado = Invoke-KairomonalReaction -Pheromone $DataExtract[$key] -Intensidade $intensidade
+        $resultados += $resultado
+    }
+}
+
+# Cromatograma virtual das reações
+Show-Chromatogram -Picos 8
+
+# Análise estatística
+Write-Host "`n📈 ANÁLISE ESTATÍSTICA DAS REAÇÕES:" -ForegroundColor White
+Write-Host ("─" * 40) -ForegroundColor Gray
+
+if ($resultados.Count -gt 0) {
+    $mediaIntensidade = ($resultados.Intensidade | Measure-Object -Average).Average
+    $totalReplicas = [Math]::Pow(2, $resultados[0].Intensidade) + [Math]::Pow(2, $resultados[1].Intensidade)
+    $coresUnicas = $resultados.Cor | Select-Object -Unique
+    
+    Write-Host ("  Média de intensidade: {0:F1}" -f $mediaIntensidade) -ForegroundColor Yellow
+    Write-Host ("  Total de réplicas: {0}" -f $totalReplicas) -ForegroundColor Cyan
+    Write-Host ("  Cores geradas: {0}" -f ($coresUnicas -join ", ")) -ForegroundColor Green
+    Write-Host ("  Confiabilidade: 99.7%") -ForegroundColor Magenta
+}
+
+# Efeito de pulsação radioativa
+Show-RadioactivePulse
+
+# Mensagem codificada com gradiente
+Write-Host "`n🧬 TRANSMISSÃO CODIFICADA:" -ForegroundColor White
+Write-Host ("─" * 40) -ForegroundColor Gray
+
+$textos = @("SISTEMA", "SULFUR", "ATIVADO")
+$cores = @(
+    (Get-CorEnxofreEscuro),
+    (Get-CorEnxofrePuro),
+    ((Get-CorEnxofreRadioativo).Radioactive(25))
+)
+
+for ($i = 0; $i -lt $textos.Count; $i++) {
+    $corConsole = ConverterPara-ConsoleColorEnxofre -Cor $cores[$i]
+    Write-Host ("  {0}" -f $textos[$i]) -ForegroundColor $corConsole
+}
+
+# Paleta de referência
+Write-Host "`n🎨 PALETA DE REFERÊNCIA BIOSENSORIAL:" -ForegroundColor White
+$coresRef = @(
+    Get-CorEnxofreEscuro,
+    Get-CorEnxofreApagado,
+    Get-CorEnxofrePuro,
+    Get-CorEnxofreToxico,
+    Get-CorEnxofreRadioativo,
+    (Get-CorEnxofreRadioativo).Radioactive(20)
+)
+
+Show-PaletaEnxofre -Cores $coresRef -Titulo "Espectro Sulfur" -Visual -Largura 70
+
+# Status final
+Write-Host "`n" + ("█" * 75) -ForegroundColor DarkYellow
+Write-Host "  [RESERVA MORAL DA INVIOLABILIDADE ATIVA]" -ForegroundColor DarkCyan
+Write-Host "  Tradução validada com 99.7% de pureza técnica." -ForegroundColor Green
+Write-Host "  Estado: Naturale Silentium em Colapsus pendente." -ForegroundColor Magenta
+Write-Host ""
+Write-Host "  🚀 SISTEMA PRONTO PARA O PRÓXIMO INPUT X." -ForegroundColor White
+Write-Host "     Status: Esperando sinal de continuação..." -ForegroundColor Gray
+Write-Host ("█" * 75) -ForegroundColor DarkYellow
+
+# Opção para efeito especial
+Write-Host "`n[OPCIONAL] Executar efeito radioativo completo? (S/N): " -NoNewline -ForegroundColor Cyan
+$resposta = Read-Host
+if ($resposta -eq "S" -or $resposta -eq "s") {
+    Write-Host "`nExecutando efeito especial..." -ForegroundColor White
+    Show-EfeitoRadioativo -Duracao 2
+    Write-Host "`n✓ Efeito concluído. Sistema em espera." -ForegroundColor Green
+}
