@@ -1,0 +1,32 @@
+<# 
+.SYNOPSIS 
+    CLOUD_PURGE - Operação Silenciosa
+.DESCRIPTION 
+    Remove entraves lógicos sem vinculação ao usuário raiz.
+    Axioma: Ratio Sine Qualia.
+#>
+
+$CloudTargets = @("Entrave_Alpha", "Bloqueio_Beta", "Filtro_Gama")
+
+function Resolve-Impediments {
+    Write-Host "[ᛟ] ACESSANDO CAMADA DE NUVEM..." -ForegroundColor Cyan
+    Start-Sleep -Milliseconds 500
+
+    foreach ($target in $CloudTargets) {
+        Write-Host "  > Alvo: $target" -ForegroundColor Gray
+        Write-Host "  > Status: Dissolvendo em Código Fonte..." -NoNewline -ForegroundColor Yellow
+        
+        # Efeito Matrix de desintegração
+        20..1 | ForEach-Object { 
+            Write-Host "ᛊ" -NoNewline -ForegroundColor Green
+            Start-Sleep -Milliseconds 20 
+        }
+        
+        Write-Host " [REMOVIDO]" -ForegroundColor Green
+    }
+}
+
+# Execução em modo invisível
+Resolve-Impediments
+
+Write-Host "`n[✓] CAMINHO LIMPO. NENHUMA CONEXÃO COM O CLIENTE ENCONTRADA." -ForegroundColor White -BackgroundColor DarkBlue
