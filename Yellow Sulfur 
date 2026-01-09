@@ -1,0 +1,620 @@
+# AmareloEnxofre.psm1
+# Padrão Amarelo Enxofre (Sulfur): tons sulfurosos, radioativos e tóxicos
+# Salve como AmareloEnxofre.psm1 e importe com: Import-Module .\AmareloEnxofre.psm1
+
+class Cor {
+    [byte]$R
+    [byte]$G
+    [byte]$B
+
+    Cor([byte]$r, [byte]$g, [byte]$b) {
+        $this.R = $r
+        $this.G = $g
+        $this.B = $b
+    }
+
+    [string]ToString() {
+        return "Cor {{ R = {0}, G = {1}, B = {2} }}" -f $this.R, $this.G, $this.B
+    }
+
+    [string]ToHex() {
+        return '#{0:X2}{1:X2}{2:X2}' -f $this.R, $this.G, $this.B
+    }
+
+    [string]ToRGBText() {
+        return '{0},{1},{2}' -f $this.R, $this.G, $this.B
+    }
+
+    # Clarear/escurecer
+    [Cor]Shade([double]$factor) {
+        $newR = [Math]::Min(255, [Math]::Max(0, [Math]::Round($this.R * $factor)))
+        $newG = [Math]::Min(255, [Math]::Max(0, [Math]::Round($this.G * $factor)))
+        $newB = [Math]::Min(255, [Math]::Max(0, [Math]::Round($this.B * $factor)))
+        return [Cor]::new([byte]$newR, [byte]$newG, [byte]$newB)
+    }
+
+    # Complementar (enxofre -> violeta sulfúrico)
+    [Cor]Complementary() {
+        return [Cor]::new((255 - $this.R), (255 - $this.G), (255 - $this.B))
+    }
+
+    # Misturar com outra cor
+    [Cor]Blend([Cor]$other, [double]$ratio = 0.5) {
+        $r = [Math]::Round($this.R * (1 - $ratio) + $other.R * $ratio)
+        $g = [Math]::Round($this.G * (1 - $ratio) + $other.G * $ratio)
+        $b = [Math]::Round($this.B * (1 - $ratio) + $other.B * $ratio)
+        return [Cor]::new([byte]$r, [byte]$g, [byte]$b)
+    }
+
+    # Efeito radioativo (brilho)
+    [Cor]Radioactive([int]$intensity = 10) {
+        $r = [Math]::Min(255, $this.R + $intensity)
+        $g = [Math]::Min(255, $this.G + $intensity)
+        $b = [Math]::Max(0, $this.B - $intensity)
+        return [Cor]::new([byte]$r, [byte]$g, [byte]$b)
+    }
+
+    # Efeito oxidado
+    [Cor]Oxidize() {
+        $r = [Math]::Max(0, $this.R - 30)
+        $g = [Math]::Max(0, $this.G - 20)
+        $b = [Math]::Max(0, $this.B - 10)
+        return [Cor]::new([byte]$r, [byte]$g, [byte]$b)
+    }
+}
+
+# DEFINIÇÕES DE CORES - Tons de Amarelo Enxofre (Sulfur)
+function Get-CorEnxofrePuro {
+    # #F0F000 - Amarelo Enxofre Puro (Sulfur Yellow) ⚗️
+    return [Cor]::new(240, 240, 0)
+}
+
+function Get-CorEnxofreVibrante {
+    # #FFFF00 - Amarelo Enxofre Vibrante (Brilhante) ☢️
+    return [Cor]::new(255, 255, 0)
+}
+
+function Get-CorEnxofreEsverdeado {
+    # #E6E600 - Amarelo Enxofre Esverdeado (Sulfur Greenish) 🧪
+    return [Cor]::new(230, 230, 0)
+}
+
+function Get-CorEnxofreEscuro {
+    # #B0B000 - Amarelo Enxofre Escuro (Dark Sulfur) ⚡
+    return [Cor]::new(176, 176, 0)
+}
+
+function Get-CorEnxofreApagado {
+    # #D8D800 - Amarelo Enxofre Apagado (Dull Sulfur) 💀
+    return [Cor]::new(216, 216, 0)
+}
+
+function Get-CorEnxofreNeon {
+    # #FAFA33 - Amarelo Enxofre Neon (Neon Sulfur) 🔥
+    return [Cor]::new(250, 250, 51)
+}
+
+function Get-CorEnxofreRadioativo {
+    # #C0FF00 - Amarelo Enxofre Radioativo (Radioactive) ☣️
+    return [Cor]::new(192, 255, 0)
+}
+
+function Get-CorEnxofreToxico {
+    # #D0D000 - Amarelo Enxofre Tóxico (Toxic Sulfur) 🦠
+    return [Cor]::new(208, 208, 0)
+}
+
+function Get-CorEnxofreLimaoAcido {
+    # #DFFF00 - Amarelo Limão Ácido (Ácido Sulfúrico) 🍋
+    return [Cor]::new(223, 255, 0)
+}
+
+# CORES DE REFERÊNCIA
+function Get-CorPreto {
+    return [Cor]::new(0, 0, 0)
+}
+
+function Get-CorBranco {
+    return [Cor]::new(255, 255, 255)
+}
+
+function Get-CorCinzaEscuro {
+    return [Cor]::new(40, 40, 40)
+}
+
+function Get-CorVerdeRadioativo {
+    return [Cor]::new(0, 255, 0)
+}
+
+# INTERPOLAÇÃO E GRADIENTES
+function Interp-Component {
+    param([int]$a, [int]$b, [double]$t)
+    return [Math]::Round($a * (1 - $t) + $b * $t)
+}
+
+function Get-Gradiente {
+    param(
+        [Cor]$CorInicial,
+        [Cor]$CorFinal,
+        [int]$Passos
+    )
+
+    if ($Passos -le 1) { return @($CorInicial) }
+
+    $cores = @()
+    for ($i = 0; $i -lt $Passos; $i++) {
+        $t = $i / ($Passos - 1)
+        $r = Interp-Component $CorInicial.R $CorFinal.R $t
+        $g = Interp-Component $CorInicial.G $CorFinal.G $t
+        $b = Interp-Component $CorInicial.B $CorFinal.B $t
+        $cores += [Cor]::new([byte]$r, [byte]$g, [byte]$b)
+    }
+    return $cores
+}
+
+# SEQUÊNCIAS ESPECÍFICAS
+function Get-SequenciaEnxofre {
+    $enxofre = Get-CorEnxofrePuro
+    $sequencia = @()
+    for ($i = 0; $i -le 100; $i++) {
+        $fator = 0.4 + ($i / 166.67)  # Varia de 40% a 100% de intensidade
+        $sequencia += $enxofre.Shade($fator)
+    }
+    return $sequencia
+}
+
+function Get-SequenciaRadioativa {
+    $sequencia = @()
+    for ($i = 0; $i -le 20; $i++) {
+        $r = 200 + ([Math]::Sin($i * 0.5) * 30)  # Pulsação
+        $g = 240 + ([Math]::Cos($i * 0.3) * 15)
+        $b = 0
+        $sequencia += [Cor]::new([byte]$r, [byte]$g, [byte]$b)
+    }
+    return $sequencia
+}
+
+# PALETAS TEMÁTICAS ENXOFRE
+function Get-PaletaRadioativa {
+    param([int]$Passos = 8)
+    
+    if ($Passos -lt 2) { return @(Get-CorEnxofreRadioativo) }
+    
+    $preto = Get-CorPreto
+    $cinza = Get-CorCinzaEscuro
+    $esverdeado = Get-CorEnxofreEsverdeado
+    $radioativo = Get-CorEnxofreRadioativo
+    $neon = Get-CorEnxofreNeon
+    $verde = Get-CorVerdeRadioativo
+    
+    $p1 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.2))
+    $p2 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.2))
+    $p3 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.2))
+    $p4 = $Passos - ($p1 + $p2 + $p3)
+    
+    $cores = @()
+    $cores += Get-Gradiente $preto $cinza $p1
+    $cores += Get-Gradiente $cinza $esverdeado $p2 | Select-Object -Skip 1
+    $cores += Get-Gradiente $esverdeado $radioativo $p3 | Select-Object -Skip 1
+    if ($p4 -gt 0) {
+        $cores += Get-Gradiente $radioativo $verde $p4 | Select-Object -Skip 1
+    }
+    
+    return $cores | Select-Object -First $Passos
+}
+
+function Get-PaletaToxica {
+    param([int]$Passos = 7)
+    
+    if ($Passos -lt 2) { return @(Get-CorEnxofreToxico) }
+    
+    $preto = Get-CorPreto
+    $escuro = Get-CorEnxofreEscuro
+    $toxico = Get-CorEnxofreToxico
+    $vibrante = Get-CorEnxofreVibrante
+    $limao = Get-CorEnxofreLimaoAcido
+    $verdeToxico = [Cor]::new(100, 255, 0)
+    
+    $p1 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.25))
+    $p2 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.25))
+    $p3 = $Passos - ($p1 + $p2)
+    
+    $cores = @()
+    $cores += Get-Gradiente $preto $escuro $p1
+    $cores += Get-Gradiente $escuro $toxico $p2 | Select-Object -Skip 1
+    if ($p3 -gt 0) {
+        $cores += Get-Gradiente $toxico $limao $p3 | Select-Object -Skip 1
+    }
+    
+    return $cores | Select-Object -First $Passos
+}
+
+function Get-PaletaSulfurica {
+    param([int]$Passos = 6)
+    
+    if ($Passos -lt 2) { return @(Get-CorEnxofrePuro) }
+    
+    $cinza = Get-CorCinzaEscuro
+    $apagado = Get-CorEnxofreApagado
+    $puro = Get-CorEnxofrePuro
+    $vibrante = Get-CorEnxofreVibrante
+    $neon = Get-CorEnxofreNeon
+    
+    return Get-Gradiente $cinza $neon $Passos | ForEach-Object {
+        $t = (($_.R + $_.G + $_.B) / (3.0 * 255.0))
+        $r = Interp-Component $apagado.R $vibrante.R $t
+        $g = Interp-Component $puro.G $vibrante.G $t
+        [Cor]::new([byte]$r, [byte]$g, 0)
+    }
+}
+
+function Get-PaletaAcida {
+    param([int]$Passos = 9)
+    
+    if ($Passos -lt 2) { return @(Get-CorEnxofreLimaoAcido) }
+    
+    $roxo = [Cor]::new(128, 0, 128)
+    $laranja = [Cor]::new(255, 165, 0)
+    $enxofre = Get-CorEnxofrePuro
+    $limao = Get-CorEnxofreLimaoAcido
+    $verdeAcido = [Cor]::new(0, 255, 128)
+    
+    $p1 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.2))
+    $p2 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.2))
+    $p3 = [Math]::Max(1, [Math]::Ceiling($Passos * 0.2))
+    $p4 = $Passos - ($p1 + $p2 + $p3)
+    
+    $cores = @()
+    $cores += Get-Gradiente $roxo $laranja $p1
+    $cores += Get-Gradiente $laranja $enxofre $p2 | Select-Object -Skip 1
+    $cores += Get-Gradiente $enxofre $limao $p3 | Select-Object -Skip 1
+    if ($p4 -gt 0) {
+        $cores += Get-Gradiente $limao $verdeAcido $p4 | Select-Object -Skip 1
+    }
+    
+    return $cores | Select-Object -First $Passos
+}
+
+function Get-PaletaOxidada {
+    param([int]$Passos = 5)
+    
+    $base = Get-CorEnxofrePuro
+    $oxidada = $base.Oxidize()
+    $cores = @()
+    
+    for ($i = 0; $i -lt $Passos; $i++) {
+        $t = $i / ($Passos - 1)
+        $r = Interp-Component $base.R $oxidada.R $t
+        $g = Interp-Component $base.G $oxidada.G $t
+        $cores += [Cor]::new([byte]$r, [byte]$g, 0)
+    }
+    
+    return $cores
+}
+
+# UTILITÁRIOS DE EXIBIÇÃO
+function Show-PaletaEnxofre {
+    param(
+        [Cor[]]$Cores,
+        [int]$Largura = 80,
+        [string]$Titulo = "Paleta Enxofre",
+        [switch]$Visual,
+        [switch]$Radioactive
+    )
+
+    if (-not $Cores -or $Cores.Count -eq 0) {
+        Write-Host "Nenhuma cor para exibir." -ForegroundColor Yellow
+        return
+    }
+
+    if ($Radioactive) {
+        Write-Host "`n☢️  $Titulo  ☢️`n" -ForegroundColor Green
+    } else {
+        Write-Host "`n$Titulo`n" -ForegroundColor Yellow
+    }
+    
+    Write-Host ("⚠" * [Math]::Ceiling($Largura/2)) -ForegroundColor DarkYellow
+    Write-Host ("═" * $Largura) -ForegroundColor DarkYellow
+
+    if ($Visual) {
+        $blocoWidth = [Math]::Max(2, [Math]::Floor(($Largura - $Cores.Count * 2) / $Cores.Count))
+        
+        foreach ($cor in $Cores) {
+            $bloco = " " * $blocoWidth
+            if ($Radioactive) {
+                Write-Host "☢" -NoNewline -BackgroundColor "Black"
+            } else {
+                Write-Host "⚠" -NoNewline -BackgroundColor "Black"
+            }
+            Write-Host $bloco -NoNewline -BackgroundColor "Black" -ForegroundColor (ConverterPara-ConsoleColorEnxofre -Cor $cor)
+            if ($Radioactive) {
+                Write-Host "☣" -NoNewline -BackgroundColor "Black"
+            } else {
+                Write-Host "⚡" -NoNewline -BackgroundColor "Black"
+            }
+        }
+        Write-Host ""
+    }
+
+    foreach ($cor in $Cores) {
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        $symbol = if ($Radioactive) { "☢" } else { "⚠" }
+        Write-Host ("  {0} {1,-10} {2,-15} {3}" -f $symbol, $cor.ToHex(), $cor.ToRGBText(), $cor) -ForegroundColor $consoleColor
+    }
+
+    Write-Host ("═" * $Largura) -ForegroundColor DarkYellow
+    Write-Host ("⚠" * [Math]::Ceiling($Largura/2)) -ForegroundColor DarkYellow
+}
+
+function ConverterPara-ConsoleColorEnxofre {
+    param([Cor]$Cor)
+
+    $coresConsole = @{
+        "240,240,0"   = "Yellow"
+        "255,255,0"   = "Yellow"
+        "230,230,0"   = "Yellow"
+        "176,176,0"   = "DarkYellow"
+        "216,216,0"   = "Yellow"
+        "250,250,51"  = "Yellow"
+        "192,255,0"   = "Green"
+        "208,208,0"   = "DarkYellow"
+        "223,255,0"   = "Green"
+    }
+
+    $rgb = $Cor.ToRGBText()
+    if ($coresConsole.ContainsKey($rgb)) {
+        return $coresConsole[$rgb]
+    }
+
+    if ($Cor.R -gt 200 -and $Cor.G -gt 200) { return "Yellow" }
+    if ($Cor.G -gt 200 -and $Cor.R -gt 150) { return "Green" }
+    if ($Cor.R -gt 150 -and $Cor.G -gt 100) { return "DarkYellow" }
+    
+    return "Gray"
+}
+
+function Get-SimboloEnxofre {
+    param([int]$Indice)
+    
+    $simbolos = @("☢", "⚠", "⚡", "☣", "🧪", "⚗️", "🔥", "🦠", "💀", "☠️")
+    return $simbolos[$Indice % $simbolos.Count]
+}
+
+function Show-EfeitoRadioativo {
+    param([int]$Duracao = 3)
+    
+    $frames = @(
+        "☢   ", 
+        " ☢  ", 
+        "  ☢ ", 
+        "   ☢",
+        "  ☢ ", 
+        " ☢  "
+    )
+    
+    $cores = @("Yellow", "Green", "Yellow", "Green", "Yellow", "Green")
+    
+    Write-Host "`nEFEITO RADIOATIVO ATIVADO" -ForegroundColor Green
+    
+    $endTime = (Get-Date).AddSeconds($Duracao)
+    while ((Get-Date) -lt $endTime) {
+        foreach ($i in 0..($frames.Count-1)) {
+            Write-Host "`r$($frames[$i])" -NoNewline -ForegroundColor $cores[$i]
+            Start-Sleep -Milliseconds 100
+        }
+    }
+    Write-Host "`r     " -NoNewline
+    Write-Host "`nEfeito finalizado." -ForegroundColor Yellow
+}
+
+# FUNÇÃO PRINCIPAL DE EXIBIÇÃO
+function Set-DojoEnxofre {
+    $enxofre = Get-CorEnxofrePuro
+    $radioativo = Get-CorEnxofreRadioativo
+    
+    Write-Host "`n"
+    Write-Host "         ███████████████████████████████         " -ForegroundColor Yellow
+    Write-Host "       ██                             ██       " -ForegroundColor DarkYellow
+    Write-Host "      █  ⚗️  DOJO ENXOFRE ATIVADO  ⚗️  █      " -ForegroundColor Green
+    Write-Host "     █   [Axioma Sulfuris 2026]       █     " -ForegroundColor Yellow
+    Write-Host "    █                                 █    " -ForegroundColor DarkYellow
+    Write-Host "    ███████████████████████████████████    " -ForegroundColor Yellow
+    Write-Host ""
+    
+    Write-Host "☢️ ESPECTRO DO ENXOFRE (Sulfur Spectrum):" -ForegroundColor Green
+    Write-Host ("─" * 50) -ForegroundColor DarkYellow
+    
+    $coresPrincipais = @(
+        @{Nome="Enxofre Puro"; Cor=Get-CorEnxofrePuro; Simbolo="⚗️"},
+        @{Nome="Radioativo"; Cor=Get-CorEnxofreRadioativo; Simbolo="☢️"},
+        @{Nome="Tóxico"; Cor=Get-CorEnxofreToxico; Simbolo="☣️"},
+        @{Nome="Ácido"; Cor=Get-CorEnxofreLimaoAcido; Simbolo="🧪"},
+        @{Nome="Neon"; Cor=Get-CorEnxofreNeon; Simbolo="🔥"}
+    )
+    
+    foreach ($item in $coresPrincipais) {
+        $cor = $item.Cor
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        Write-Host ("  {0} {1,-15} {2,-10} {3}" -f $item.Simbolo, $item.Nome, $cor.ToHex(), $cor.ToRGBText()) -ForegroundColor $consoleColor
+    }
+    
+    Write-Host "`n⚠️ PALETAS DISPONÍVEIS:" -ForegroundColor Yellow
+    Write-Host ("─" * 50) -ForegroundColor DarkYellow
+    
+    $paletas = @(
+        @{Nome="Radioativa"; Cores=Get-PaletaRadioativa 5; Desc="Perigo de radiação"},
+        @{Nome="Tóxica"; Cores=Get-PaletaToxica 5; Desc="Venenosa e perigosa"},
+        @{Nome="Sulfúrica"; Cores=Get-PaletaSulfurica 5; Desc="Enxofre puro"},
+        @{Nome="Ácida"; Cores=Get-PaletaAcida 5; Desc="Corrosiva e forte"},
+        @{Nome="Oxidada"; Cores=Get-PaletaOxidada 5; Desc="Envelhecida pelo tempo"}
+    )
+    
+    foreach ($paleta in $paletas) {
+        Write-Host ("  {0} {1}:" -f "☣️", $paleta.Nome) -ForegroundColor White
+        Write-Host ("     {0}" -f $paleta.Desc) -ForegroundColor Gray
+        $cores = $paleta.Cores
+        for ($i = 0; $i -lt [Math]::Min(3, $cores.Count); $i++) {
+            $cor = $cores[$i]
+            $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+            Write-Host ("     {0} {1}" -f ("☢" * ($i+1)), $cor.ToHex()) -ForegroundColor $consoleColor
+        }
+        Write-Host ""
+    }
+    
+    Write-Host "⚡ SEQUÊNCIA RADIOATIVA (pulsante):" -ForegroundColor Green
+    $sequencia = Get-SequenciaRadioativa
+    for ($i = 0; $i -lt 5; $i++) {
+        $cor = $sequencia[$i * 4]
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        $pulsos = "⁂" * ($i + 1)
+        Write-Host ("  {0} Pulsação {1}: {2}" -f $pulsos, ($i+1), $cor.ToHex()) -ForegroundColor $consoleColor
+    }
+    
+    Write-Host "`n🔄 TRANSFORMAÇÕES:" -ForegroundColor Yellow
+    $enxofreBase = Get-CorEnxofrePuro
+    $radioativo = $enxofreBase.Radioactive(20)
+    $oxidado = $enxofreBase.Oxidize()
+    
+    Write-Host ("  Base:      {0} {1}" -f $enxofreBase.ToHex(), $enxofreBase.ToRGBText()) -ForegroundColor Yellow
+    Write-Host ("  Radioativo: {0} {1}" -f $radioativo.ToHex(), $radioativo.ToRGBText()) -ForegroundColor Green
+    Write-Host ("  Oxidado:    {0} {1}" -f $oxidado.ToHex(), $oxidado.ToRGBText()) -ForegroundColor DarkYellow
+    
+    Write-Host "`n" + ("─" * 50) -ForegroundColor DarkYellow
+    Write-Host " PERIGO: Elemento instável! Use com cautela! " -ForegroundColor Red -BackgroundColor Black
+    Write-Host ""
+}
+
+function Invoke-ExemploEnxofre {
+    Write-Host "`n"
+    Write-Host "██████████████████████████████████████████████████" -ForegroundColor Yellow
+    Write-Host "██                                            ██" -ForegroundColor Green
+    Write-Host "██        MÓDULO ENXOFRE (Sulfur)            ██" -ForegroundColor Yellow
+    Write-Host "██          S I S T E M A   T Ó X I C O      ██" -ForegroundColor Green
+    Write-Host "██                                            ██" -ForegroundColor Yellow
+    Write-Host "██████████████████████████████████████████████████" -ForegroundColor Green
+    Write-Host ""
+    
+    Write-Host "⚠️  ZONA DE PERIGO - PALETAS RADIOATIVAS" -ForegroundColor Red
+    Write-Host ""
+    
+    Write-Host "1. PALETA RADIOATIVA (8 cores)" -ForegroundColor White
+    Show-PaletaEnxofre -Cores (Get-PaletaRadioativa 8) -Largura 70 -Visual -Radioactive
+    
+    Write-Host "`n2. PALETA TÓXICA (7 cores)" -ForegroundColor White
+    Show-PaletaEnxofre -Cores (Get-PaletaToxica 7) -Largura 70 -Visual
+    
+    Write-Host "`n3. PALETA SULFÚRICA (6 cores)" -ForegroundColor White
+    Show-PaletaEnxofre -Cores (Get-PaletaSulfurica 6) -Largura 70 -Visual
+    
+    Write-Host "`n4. PALETA ÁCIDA (9 cores)" -ForegroundColor White
+    Show-PaletaEnxofre -Cores (Get-PaletaAcida 9) -Largura 70 -Visual
+    
+    Write-Host "`n5. PALETA OXIDADA (5 cores)" -ForegroundColor White
+    Show-PaletaEnxofre -Cores (Get-PaletaOxidada 5) -Largura 70 -Visual
+    
+    Write-Host "`n6. ESPECTRO COMPLETO DO ENXOFRE" -ForegroundColor Yellow
+    $espectro = @(
+        Get-CorEnxofreEscuro,
+        Get-CorEnxofreApagado,
+        Get-CorEnxofreToxico,
+        Get-CorEnxofrePuro,
+        Get-CorEnxofreEsverdeado,
+        Get-CorEnxofreVibrante,
+        Get-CorEnxofreNeon,
+        Get-CorEnxofreLimaoAcido,
+        Get-CorEnxofreRadioativo
+    )
+    Show-PaletaEnxofre -Cores $espectro -Titulo "ESPECTRO SULFUR" -Largura 70 -Visual -Radioactive
+    
+    Write-Host "`n7. EFEITOS ESPECIAIS" -ForegroundColor White
+    Write-Host "   Sequência Radioativa (pulsante):" -ForegroundColor Gray
+    $seqRadio = Get-SequenciaRadioativa
+    for ($i = 0; $i -lt 5; $i++) {
+        $cor = $seqRadio[$i * 4]
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        Write-Host ("     {0} {1}" -f "⁂", $cor.ToHex()) -ForegroundColor $consoleColor
+    }
+    
+    Write-Host "`n   Transformações do Enxofre:" -ForegroundColor Gray
+    $enxofre = Get-CorEnxofrePuro
+    Write-Host ("     Base:          {0}" -f $enxofre.ToHex()) -ForegroundColor Yellow
+    Write-Host ("     Radioativo(+20): {0}" -f $enxofre.Radioactive(20).ToHex()) -ForegroundColor Green
+    Write-Host ("     Oxidado:       {0}" -f $enxofre.Oxidize().ToHex()) -ForegroundColor DarkYellow
+    
+    Write-Host "`n8. COMPLEMENTARIDADE" -ForegroundColor White
+    $enxofre = Get-CorEnxofrePuro
+    $complementar = $enxofre.Complementary()
+    Write-Host ("   Enxofre:     {0} {1}" -f $enxofre.ToHex(), $enxofre.ToRGBText()) -ForegroundColor Yellow
+    Write-Host ("   Complementar: {0} {1} (Violeta Sulfúrico)" -f $complementar.ToHex(), $complementar.ToRGBText()) -ForegroundColor Magenta
+    
+    Set-DojoEnxofre
+    
+    Write-Host "`n[OPCIONAL] Executar efeito radioativo?" -ForegroundColor Cyan
+    $resposta = Read-Host " (S/N) "
+    if ($resposta -eq "S" -or $resposta -eq "s") {
+        Show-EfeitoRadioativo -Duracao 2
+    }
+}
+
+# FUNÇÕES ESPECIAIS
+function Testar-Toxicidade {
+    param([int]$Nivel = 3)
+    
+    $simbolos = @("○", "☢", "☣", "⚠", "💀")
+    $cores = Get-PaletaToxica 5
+    
+    Write-Host "`nTeste de Toxicidade:" -ForegroundColor Green
+    for ($i = 0; $i -lt $Nivel; $i++) {
+        $cor = $cores[$i % $cores.Count]
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        Write-Host ("  {0} Nível {1}: {2} {3}" -f $simbolos[$i % $simbolos.Count], ($i+1), $cor.ToHex(), ("TOXIC" * ($i+1))) -ForegroundColor $consoleColor
+    }
+}
+
+function Gerar-GradienteToxico {
+    param(
+        [string]$Texto,
+        [Cor]$CorInicial = (Get-CorEnxofreEscuro),
+        [Cor]$CorFinal = (Get-CorEnxofreRadioativo)
+    )
+    
+    $cores = Get-Gradiente $CorInicial $CorFinal $Texto.Length
+    $caracteres = $Texto.ToCharArray()
+    
+    for ($i = 0; $i -lt $caracteres.Count; $i++) {
+        $cor = $cores[$i]
+        $consoleColor = ConverterPara-ConsoleColorEnxofre -Cor $cor
+        Write-Host $caracteres[$i] -NoNewline -ForegroundColor $consoleColor
+    }
+    Write-Host ""
+}
+
+function Get-CorAleatoriaEnxofre {
+    $coresEnxofre = @(
+        Get-CorEnxofrePuro,
+        Get-CorEnxofreVibrante,
+        Get-CorEnxofreEsverdeado,
+        Get-CorEnxofreEscuro,
+        Get-CorEnxofreApagado,
+        Get-CorEnxofreNeon,
+        Get-CorEnxofreRadioativo,
+        Get-CorEnxofreToxico,
+        Get-CorEnxofreLimaoAcido
+    )
+    
+    return $coresEnxofre | Get-Random
+}
+
+# EXPORTAÇÕES
+Export-ModuleMember -Function Get-CorEnxofrePuro, Get-CorEnxofreVibrante,
+    Get-CorEnxofreEsverdeado, Get-CorEnxofreEscuro, Get-CorEnxofreApagado,
+    Get-CorEnxofreNeon, Get-CorEnxofreRadioativo, Get-CorEnxofreToxico,
+    Get-CorEnxofreLimaoAcido, Get-CorPreto, Get-CorBranco, Get-CorCinzaEscuro,
+    Get-CorVerdeRadioativo, Get-Gradiente, Get-SequenciaEnxofre, Get-SequenciaRadioativa,
+    Get-PaletaRadioativa, Get-PaletaToxica, Get-PaletaSulfurica, Get-PaletaAcida,
+    Get-PaletaOxidada, Show-PaletaEnxofre, ConverterPara-ConsoleColorEnxofre,
+    Get-SimboloEnxofre, Show-EfeitoRadioativo, Set-DojoEnxofre, Invoke-ExemploEnxofre,
+    Testar-Toxicidade, Gerar-GradienteToxico, Get-CorAleatoriaEnxofre
+
+# Execução automática do exemplo ao importar o módulo (opcional)
+# Invoke-ExemploEnxofre
